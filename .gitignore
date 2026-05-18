@@ -1,0 +1,22 @@
+# C
+engine/build/
+*.o
+*.d
+*.a
+*.so
+vgcore.*
+
+# Rust
+gateway/target/
+**/*.rs.bk
+
+# Editor / OS
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+
+# Local env
+.env
+.env.local
