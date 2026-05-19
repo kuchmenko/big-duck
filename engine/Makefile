@@ -1,5 +1,5 @@
 CC      ?= clang
-CSTD    ?= -std=c11
+CSTD    ?= -std=c17
 WARN    := -Wall -Wextra -Wpedantic -Wshadow -Wconversion -Wstrict-prototypes -Werror
 OPT     ?= -O2 -g
 CFLAGS  := $(CSTD) $(WARN) $(OPT) -Iinclude
@@ -35,3 +35,6 @@ test:
 
 clean:
 	rm -rf $(BUILD)
+
+run:
+	./$(BIN)
