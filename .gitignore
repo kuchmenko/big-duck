@@ -1,10 +1,6 @@
-# C
-engine/build/
-*.o
-*.d
-*.a
-*.so
-vgcore.*
+# Zig
+engine/.zig-cache/
+engine/zig-out/
 
 # Rust
 gateway/target/

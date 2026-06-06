@@ -5,21 +5,21 @@ all: build
 build: engine gateway
 
 engine:
-	$(MAKE) -C engine
+	cd engine && zig build
 
 gateway:
 	cargo build --manifest-path gateway/Cargo.toml
 
 test:
-	$(MAKE) -C engine test
+	cd engine && zig build test
 	cargo test --manifest-path gateway/Cargo.toml
 
-run-engine: engine
-	./engine/build/engine
+run-engine:
+	cd engine && zig build run
 
-run-gateway: gateway
+run-gateway:
 	cargo run --manifest-path gateway/Cargo.toml
 
 clean:
-	$(MAKE) -C engine clean
+	rm -rf engine/zig-out engine/.zig-cache
 	cargo clean --manifest-path gateway/Cargo.toml
