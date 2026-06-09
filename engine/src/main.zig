@@ -3,11 +3,12 @@ const book = @import("book.zig");
 const Book = book.Book;
 const Order = book.Order;
 
-pub fn main() void {
+pub fn main(init: std.process.Init) void {
     std.debug.print("big-duck engine: ready\n", .{});
 
     var b: Book = undefined;
-    b.init();
+    b.init(init.gpa);
+    defer b.orders.deinit(init.gpa);
 
     std.debug.print("--- Scenario 1: rest two SELLs (no trades) ---\n", .{});
     var s1 = Order{ .id = 1, .side = .sell, .price = 51, .qty = 500 };

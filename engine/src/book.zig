@@ -17,17 +17,23 @@ pub const Order = struct {
 
 const Level = struct {
     total_qty: Qty = 0,
+    head: OrderId,
+    tail: OrderId,
 };
 
 pub const Book = struct {
+    orders: std.AutoHashMapUnmanaged(OrderId, Order),
     levels: [2][max_price_ticks]Level,
     best_bid: Price,
     best_ask: Price,
+    allocator: std.mem.Allocator,
 
-    pub fn init(b: *Book) void {
-        b.* = std.mem.zeroes(Book);
+    pub fn init(b: *Book, allocator: std.mem.Allocator) void {
+        @memset(std.mem.asBytes(&b.levels), 0);
         b.best_bid = -1; // no bids — lower than any tick
         b.best_ask = max_price_ticks; // no asks — higher than any tick
+        b.allocator = allocator;
+        b.orders = std.AutoHashMapUnmanaged(OrderId, Order){};
     }
 
     fn level(b: *Book, side: Side, price: Price) *Level {
@@ -39,6 +45,7 @@ pub const Book = struct {
             .buy => {
                 while (o.qty > 0 and b.best_ask <= o.price) {
                     const lvl = b.level(.sell, b.best_ask);
+                    const head = b.orders.get(lvl.head) orelse return error.NotFound;
                     const eat = @min(o.qty, lvl.total_qty);
                     lvl.total_qty -= eat;
                     o.qty -= eat;
@@ -53,6 +60,7 @@ pub const Book = struct {
                 if (o.qty > 0) {
                     b.level(.buy, o.price).total_qty += o.qty;
                     if (o.price > b.best_bid) b.best_bid = o.price;
+                    b.orders.put(b.allocator, o.id, o.*) catch {};
                 }
             },
             .sell => {
@@ -72,15 +80,21 @@ pub const Book = struct {
                 if (o.qty > 0) {
                     b.level(.sell, o.price).total_qty += o.qty;
                     if (o.price < b.best_ask) b.best_ask = o.price;
+                    b.orders.put(b.allocator, o.id, o.*) catch {};
                 }
             },
         }
+    }
+
+    pub fn cancel(b: *Book, o: OrderId) void {
+        const order = b.orders.get(o);
     }
 };
 
 test "buy crosses resting asks" {
     var b: Book = undefined;
-    b.init();
+    b.init(std.testing.allocator);
+    defer b.orders.deinit(b.allocator);
 
     var s1 = Order{ .id = 1, .side = .sell, .price = 51, .qty = 500 };
     var s2 = Order{ .id = 2, .side = .sell, .price = 50, .qty = 300 };
@@ -98,7 +112,8 @@ test "buy crosses resting asks" {
 
 test "non-crossing buy rests" {
     var b: Book = undefined;
-    b.init();
+    b.init(std.testing.allocator);
+    defer b.orders.deinit(b.allocator);
 
     var buy = Order{ .id = 1, .side = .buy, .price = 40, .qty = 200 };
     b.submit(&buy);

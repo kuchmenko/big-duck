@@ -1,0 +1,6 @@
+test
++- run test w
+TRADE @ 50 qty 300
+TRADE @ 51 qty 400
+failed command: ./.zig-cache/o/40ab570d5455c047ed4f66d9daef8d91/test --cache-dir=./.zig-cache --seed=0xd339dd0e --listen=-
+
